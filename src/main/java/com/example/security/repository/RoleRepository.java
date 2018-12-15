@@ -1,12 +1,10 @@
 package com.example.security.repository;
 
-import com.example.security.model.User;
+import com.example.security.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface RoleRepository extends JpaRepository<Role, Long> {
 
-    User findByUsername(String username);
-    
 }
