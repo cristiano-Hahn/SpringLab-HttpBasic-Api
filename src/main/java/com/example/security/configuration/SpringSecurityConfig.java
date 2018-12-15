@@ -1,5 +1,6 @@
 package com.example.security.configuration;
 
+import com.example.security.filter.CustomFilter;
 import com.example.security.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,8 +12,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.PostConstruct;
@@ -21,7 +24,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableWebSecurity
 @ComponentScan("com.example.security")
-public class SpringSecurityConfig  extends WebSecurityConfigurerAdapter {
+public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private WebApplicationContext applicationContext;
@@ -30,6 +33,8 @@ public class SpringSecurityConfig  extends WebSecurityConfigurerAdapter {
     private AuthenticationSuccessHandlerImpl successHandler;
     @Autowired
     private DataSource dataSource;
+    @Autowired
+    AuthenticationEntryPoint authenticationEntryPoint;
 
     @PostConstruct
     public void completeSetup() {
@@ -55,15 +60,18 @@ public class SpringSecurityConfig  extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/login")
-                .permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .formLogin()
-                .successHandler(successHandler)
-                .and()
-                .httpBasic();
+                .httpBasic().authenticationEntryPoint(authenticationEntryPoint);
+
+        http.
+                addFilterAfter(new CustomFilter(), BasicAuthenticationFilter.class);
+
+        http.
+                sessionManagement().
+                sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
     @Bean
